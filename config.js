@@ -1,9 +1,11 @@
 module.exports = {
     debugMode: false,
     api: {
-        host: "https://minitwitterapi.reactiveprogramming.io"
+        host: "http://api.localhost:8080"
     },
     tweets: {
         maxTweetSize: 140
     }
 }
+
+//https://minitwitterapi.reactiveprogramming.io

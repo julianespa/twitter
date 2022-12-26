@@ -1,6 +1,6 @@
-import mongoose, { Schema } from "mongoose";
-import uniqueValidator from 'mongoose-unique-validator'
-import { Tweet } from "./Tweet";
+const mongoose = require('mongoose')
+const uniqueValidator = require('mongoose-unique-validator')
+const Tweet = require('./Tweet')
 
 const profileCollection = 'Profile'
 
@@ -12,8 +12,8 @@ const profileSchema = new mongoose.Schema({
     avatar: {type: String, default: null},
     banner: {type: String, default: null},
     tweetCount: {type: Number, default: 0},
-    followingRef: [{type: Schema.Types.ObjectId, ref: 'Profile', default: []}],
-    followersRef: [{type: Schema.Types.ObjectId, ref: 'Profile', default: []}],
+    followingRef: [{type: mongoose.Types.ObjectId, ref: 'Profile', default: []}],
+    followersRef: [{type: mongoose.Types.ObjectId, ref: 'Profile', default: []}],
     date: {type: Date, default: Date.now},
 })
 
@@ -34,4 +34,6 @@ profileSchema.virtual('followers').get(()=>{
     return this.followersRef.length
 })
 
-export const Profile = mongoose.model(profileCollection, profileSchema)
+const Profile = mongoose.model(profileCollection, profileSchema)
+
+module.exports = Profile
