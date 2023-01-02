@@ -48,10 +48,14 @@ router.post('/signup', userController.signup)
 router.post('/login', userController.login)
 router.get('/tweets', tweetController.getNewTweets)
 router.get('/profile/:user', userController.getProfileByUsername)
+router.get('/tweets/:user', tweetController.getUserTweets)
+router.get('/followings/:user', userController.getFollowing)
+router.get('/followers/:user', userController.getFollower)
 
 // Private access services
 router.get('/secure/relogin', userController.relogin)
 router.get('/secure/suggestedUsers', userController.getSuggestedUser)
+router.put('/secure/profile', userController.updateProfile)
 
 router.get('/*', (req,res,err)=>{
     res.status(400).send({message: 'Invalid service'})

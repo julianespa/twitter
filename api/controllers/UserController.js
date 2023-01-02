@@ -199,11 +199,101 @@ const getProfileByUsername = async (req,res,err) => {
     }
 }
 
+const updateProfile = async (req,res,err) => {
+    let username = req.user.username
+
+    try {
+        const updates = {
+            name: req.body.name,
+            description: req.body.description,
+            avatar: req.body.avatar,
+            banner: req.body.banner
+        }
+
+        let response = await Profile.updateOne({userName: username}, updates)
+        res.send({
+            ok: true
+        })
+    } catch (error) {
+        res.send({
+            ok: false,
+            message: error.message || 'Error updating user profile'
+        })
+    }
+} 
+
+const getFollowing = async (req,res,err) => {
+    let username = req.params.user
+
+    try {
+        let followings = await Profile.findOne({userName: username})
+            .populate('followingRef')
+        
+        if(followings == null) throw new Error('User does not exist')
+
+        let response = followings.followingRef.map(x => {
+            return {
+                _id: x._id,
+                userName: x.userName,
+                name: x.name,
+                description: x.description,
+                avatar: x.avatar || '/public/resources/avatars/0.png',
+                banner: x.banner || '/public/resources/banners/4.png'
+            }
+        })
+
+        res.send({
+            ok: true,
+            body: response
+        })
+    } catch (error) {
+        res.send({
+            ok: false,
+            message: error.message || 'Get followings error'
+        })
+    }
+}
+
+const getFollower = async (req,res,err) => {
+    let username = req.params.user
+
+    try {
+        let followers = await Profile.findOne({userName: username})
+            .populate('followersRef')
+        
+        if(followers == null) throw new Error('User does not exist')
+
+        let response = followers.followersRef.map(x => {
+            return {
+                _id: x._id,
+                userName: x.userName,
+                name: x.name,
+                description: x.description,
+                avatar: x.avatar || '/public/resources/avatars/0.png',
+                banner: x.banner || '/public/resources/banners/4.png'
+            }
+        })
+
+        res.send({
+            ok: true,
+            body: response
+        })
+    } catch (error) {
+        res.send({
+            ok: false,
+            message: error.message || 'Get followers error'
+        })
+    }
+}
+
 module.exports = {
     usernameValidate,
     signup,
     login,
     relogin,
     getSuggestedUser,
-    getProfileByUsername
+    getProfileByUsername,
+    updateProfile,
+    getFollowing,
+    getFollower
 }
