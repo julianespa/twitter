@@ -3,6 +3,7 @@ const pug = require('pug')
 const jwt = require('jsonwebtoken')
 const configuration = require('../serverConfig')
 const userController = require('../api/controllers/UserController')
+const tweetController = require('../api/controllers/TweetController')
 
 const router = express.Router()
 
@@ -41,8 +42,16 @@ router.get('/', (req,res)=>{
     res.send(pug.renderFile(__dirname + '/../public/apidoc/api-index.pug'))
 })
 
+// Public access services
 router.get('/usernameValidate/:username', userController.usernameValidate)
 router.post('/signup', userController.signup)
+router.post('/login', userController.login)
+router.get('/tweets', tweetController.getNewTweets)
+router.get('/profile/:user', userController.getProfileByUsername)
+
+// Private access services
+router.get('/secure/relogin', userController.relogin)
+router.get('/secure/suggestedUsers', userController.getSuggestedUser)
 
 router.get('/*', (req,res,err)=>{
     res.status(400).send({message: 'Invalid service'})
