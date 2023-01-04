@@ -3,6 +3,7 @@ const bcrypt = require('bcrypt')
 const { generateToken } = require('../services/AuthService')
 const jwt = require('jsonwebtoken')
 const configuration = require('../../serverConfig')
+const { default: mongoose } = require('mongoose')
 
 const usernameValidate = async (req, res, err) => {
     try {
@@ -286,6 +287,54 @@ const getFollower = async (req,res,err) => {
     }
 }
 
+const follow = async (req,res,err) => {
+    let username = req.user.username
+    let followingUser = req.body.followingUser
+    let session
+
+    try {
+        session = await mongoose.startSession()
+        session.startTransaction()
+
+        let users = await Profile.find({userName: {$in: [username, followingUser]}})
+
+        if(users.length != 2) throw new Error('user does not exist')
+        let my = users.find(x => x.userName == username)
+        let other = users.find(x => x.userName == followingUser)
+
+        let following = my.followingRef.find(x => x.toString() == other._id.toString()) != null
+
+        let myUpdate = null
+        let otherUpdate = null
+
+        if(following) {
+            myUpdate = { $pull: {followingRef: other._id}}
+            otherUpdate = { $pull: {followersRef: my._id}}
+        } else {
+            myUpdate = { $push: {followingRef: other._id}}
+            otherUpdate = { $push: {followersRef: my._id}}
+        }
+
+        let myUp = await Profile.updateOne({userName: my.userName}, myUpdate, {session})
+        let otherUp = await Profile.updateOne({userName: other.userName}, otherUpdate, {session})
+
+        res.send({
+            ok: true,
+            unfollow: following
+        })
+
+        session.commitTransaction()
+
+    } catch (error) {
+        console.log('error =>', error.message)
+        session.abortTransaction()
+        res.send({
+            ok: false,
+            message: error.message || 'Operation error'
+        })
+    }
+}
+
 module.exports = {
     usernameValidate,
     signup,
@@ -295,5 +344,6 @@ module.exports = {
     getProfileByUsername,
     updateProfile,
     getFollowing,
-    getFollower
+    getFollower,
+    follow
 }

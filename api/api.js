@@ -56,6 +56,7 @@ router.get('/followers/:user', userController.getFollower)
 router.get('/secure/relogin', userController.relogin)
 router.get('/secure/suggestedUsers', userController.getSuggestedUser)
 router.put('/secure/profile', userController.updateProfile)
+router.post('/secure/follow', userController.follow)
 
 router.get('/*', (req,res,err)=>{
     res.status(400).send({message: 'Invalid service'})
