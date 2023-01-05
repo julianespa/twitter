@@ -14,6 +14,8 @@ const getNewTweets = async (req,res,err) => {
             .limit(10)
             .skip(perPage * page)
 
+        //console.log(tweets)
+
         let response = tweets.map(x =>{
             return {
                 _id: x._id,
@@ -25,12 +27,14 @@ const getNewTweets = async (req,res,err) => {
                 },
                 date: x.date,
                 message: x.message,
-                liked: x.likeRef.find( likeUser => likeUser.toString() === user.id || null),
-                likeCounter: x.likeCounter,
+                liked: x.likeRef.find( likeUser => likeUser.toString() === user.id) || null,
+                likeCounter: x.likeRef.length,
                 replys: x.replys,
                 image: x.image
             }
         })
+
+        console.log(response)
 
         res.send({
             ok: true,
@@ -73,8 +77,8 @@ const getUserTweets = async (req,res,err) => {
                 },
                 date: x.date,
                 message: x.message,
-                liked: x.likeRef.find(likeUser => likeUser.toString() === user._id || null),
-                likeCounter: x.likeCounter,
+                liked: x.likeRef.find(likeUser => likeUser.toString() === user._id) || null,
+                likeCounter: x.likeRef.length,
                 replys: x.replys,
                 image: x.image
             }
@@ -93,7 +97,94 @@ const getUserTweets = async (req,res,err) => {
     }
 }
 
+const addTweet = (req,res,err) => {
+    if(req.body.tweetParent){
+        createReplyTweet(req,res,err)
+    } else {
+        createNewTweet(req,res,err)
+    }
+}
+
+const createNewTweet = async (req,res,err) => {
+    console.log('create new tweet =>')
+    let user = req.user
+
+    let session
+    try {
+        session = await mongoose.startSession()
+        session.startTransaction()
+
+        let newTweet = new Tweet({
+            _creator: user.id,
+            tweetParent: req.body.tweetParent,
+            message: req.body.message,
+            image: req.body.image
+        })
+
+        let updateProfile = await Profile.updateOne({_id: user.id}, {$inc: {tweetCount: 1}}, {session})
+
+        console.log(updateProfile)
+
+        if((!updateProfile.acknowledged) || updateProfile.modifiedCount == 0) throw new Error('User does not exist')
+
+        newTweet = await newTweet.save({session})
+
+        res.send({
+            ok: true,
+            tweet: newTweet
+        })
+
+        session.commitTransaction()
+
+    } catch (error) {
+        console.log('error =>', error.message)
+        session.abortTransaction()
+        res.send({
+            ok:false,
+            message: error.message || 'Error saving tweet',
+            error: error.error || err
+        })
+    }
+}
+
+const createReplyTweet = async (req,res,err) => {
+    let user = req.user
+
+    let session
+    try {
+        session = await mongoose.startSession()
+        session.startTransaction()
+
+        let newTweet = new Tweet({
+            _creator: user.id,
+            tweetParent: req.body.tweetParent,
+            message: req.body.message,
+            image: req.body.image
+        })
+        
+        let updatedTweet = await Tweet.updateOne({_id: req.body.tweetParent}, {$inc: {replys:1}}).session(session)
+
+        if((!updateProfile.acknowledged) || updateProfile.modifiedCount == 0) throw new Error('parent tweet do not exist')
+
+        newTweet = await newTweet.save({session})
+        res.send({
+            ok: true,
+            tweet: newTweet
+        })
+
+        session.commitTransaction()
+    } catch (error) {
+        session.abortTransaction()
+        res.send({
+            ok: false,
+            message: error.message || 'saving tweet error',
+            error: err
+        })
+    }
+}
+
 module.exports = {
     getNewTweets,
-    getUserTweets
+    getUserTweets,
+    addTweet
 }
