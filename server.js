@@ -35,7 +35,7 @@ const startServer = () => {
         app.use(require('webpack-dev-middleware')(compiler, {publicPath: config.output.publicPath}))
     }
 
-    app.use(vhost('api.*', api))
+    app.use(vhost('api.mini-twitter.onrender.com', api))
     
     app.get('/*',(req,res)=>{
         res.sendFile(path.join(__dirname, 'index.html'))
