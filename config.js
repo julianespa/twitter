@@ -1,7 +1,7 @@
 module.exports = {
     debugMode: false,
     api: {
-        host: "http://api.localhost:8080"
+        host: "http://api.localhost:80"
     },
     tweets: {
         maxTweetSize: 140

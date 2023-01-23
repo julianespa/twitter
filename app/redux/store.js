@@ -3,6 +3,8 @@ import thunk from "redux-thunk";
 import { createLogger } from "redux-logger";
 import reducers from '../redux/reducers/index'
 
+
+
 const composeEnhancers = window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose
 
 const middleware = [thunk]

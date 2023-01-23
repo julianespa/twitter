@@ -4,6 +4,7 @@ import Tweet from "./Tweet";
 import APIInvoker from "./utils/APIInvoker";
 import update from 'immutability-helper'
 import browserHistory from './History'
+import UserContext from './context/UserContext'
 
 class TweetDetail extends React.Component {
 
@@ -11,6 +12,7 @@ class TweetDetail extends React.Component {
         super(props)
         this.state = null
     }
+
 
     componentWillMount(){
         let tweet = this.props.match.params.tweet
@@ -46,7 +48,7 @@ class TweetDetail extends React.Component {
     handleClose(){
         $('html').removeClass('modal-mode')
         browserHistory.goBack()
-        location.reload()
+        location.replace('/')
     }
 
     render(){
@@ -63,7 +65,7 @@ class TweetDetail extends React.Component {
                             <i className="fa fa-times fa-2x tweet-close" aria-hidden="true" onClick={this.handleClose.bind(this)}/>
                             <Tweet tweet={this.state} detail={true} />
                             <div className="tweet-details-reply">
-                                <Reply profile={this.state._creator} operations={{addNewTweet: this.addNewTweet.bind(this)}} key={'detail-' + this.state._id} newReply={false} />
+                                <Reply profile={this.props.match.user} operations={{addNewTweet: this.addNewTweet.bind(this)}} key={'detail-' + this.state._id} newReply={false} />
                             </div>
                             <ul className="tweet-detail-responses">
                                 <If condition={this.state.replysTweets != null} >

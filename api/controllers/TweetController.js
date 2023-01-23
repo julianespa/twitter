@@ -34,8 +34,6 @@ const getNewTweets = async (req,res,err) => {
             }
         })
 
-        console.log(response)
-
         res.send({
             ok: true,
             body: response
@@ -164,7 +162,7 @@ const createReplyTweet = async (req,res,err) => {
         
         let updatedTweet = await Tweet.updateOne({_id: req.body.tweetParent}, {$inc: {replys:1}}).session(session)
 
-        if((!updateProfile.acknowledged) || updateProfile.modifiedCount == 0) throw new Error('parent tweet do not exist')
+        if((!updatedTweet.acknowledged) || updatedTweet.modifiedCount == 0) throw new Error('parent tweet do not exist')
 
         newTweet = await newTweet.save({session})
         res.send({
@@ -183,8 +181,103 @@ const createReplyTweet = async (req,res,err) => {
     }
 }
 
+const like = async (req,res,err) => {
+    let user = req.user
+
+    try {
+        let updateStatement = req.body.like ? { $push: {likeRef: mongoose.Types.ObjectId(user.id)}} : { $pull: {likeRef: mongoose.Types.ObjectId(user.id)}}
+        
+        let tweet = await Tweet.findOneAndUpdate({_id: req.body.tweetID}, updateStatement)
+
+        if(tweet == null) throw new Error('Tweet does not exist')
+
+        res.send({
+            ok: true,
+            body: {
+                _creator: tweet._creator,
+                tweetParent: tweet.tweetParent,
+                date: tweet.date,
+                message: tweet.message,
+                likeRef: tweet.likeRef,
+                image: tweet.image,
+                replys: tweet.replys,
+                likeCounter: tweet.likeRef.length += req.body.like ? 1 : -1
+            }
+        })
+    } catch (error) {
+        console.error(error.message)
+        res.send({
+            ok: false,
+            message: error.message || 'updating tweet error',
+            error: error.error
+        })
+    }
+}
+
+const getTweetDetails = async (req,res,err) => {
+    let user = req.user || {}
+
+    try {
+        let tweetId = req.params.tweet
+        if(!mongoose.Types.ObjectId.isValid(tweetId)) throw new Error('Invalid tweet ID')
+
+        let tweet = await Tweet.findOne({_id: tweetId}).populate("_creator")
+        if(tweet == null) throw new Error('Tweet does not exist')
+
+        let tweets = await Tweet.find({ tweetParent: mongoose.Types.ObjectId(tweetId)}).populate('_creator').sort('-date')
+
+        tweets = tweets || []
+
+        let replys = tweets.map(x => {
+            return {
+                _id: x._id,
+                _creator: {
+                    _id: x._creator._id,
+                    name: x._creator.name,
+                    userName: x._creator.userName,
+                    avatar: x._creator.avatar || '/public/resources/avatars/0.png'
+                },
+                date: x.date,
+                message:x.message,
+                liked: x.likeRef.find( likeUser => likeUser.toString() == user.id) ||  null,
+                likeCounter: x.likeRef.length,
+                replys: x.replys,
+                image: x.image
+            }
+        })
+
+        res.send({
+            ok: true,
+            body: {
+                _id: tweet._id,
+                _creator: {
+                    _id: tweet._creator._id,
+                    name: tweet._creator.name,
+                    userName: tweet._creator.userName,
+                    avatar: tweet._creator.avatar || '/public/resources/avatars/0.png'
+                },
+                date: tweet.date,
+                message: tweet.message,
+                liked: tweet.likeRef.find( likeUser => likeUser.toString() == user.id) ||  null,
+                likeCounter: tweet.likeRef.length,
+                image: tweet.image,
+                replys: tweet.replys,
+                replysTweets: replys
+            }
+        })
+    } catch (error) {
+        res.send({
+            ok: false,
+            message: error.message || 'Loading tweet error',
+            error: error
+        })
+    }
+}
+
 module.exports = {
     getNewTweets,
     getUserTweets,
-    addTweet
+    addTweet,
+    like,
+    getTweetDetails
 }

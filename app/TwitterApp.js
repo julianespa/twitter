@@ -31,7 +31,7 @@ const TwitterApp = (props) => {
 
         const WrapperDetail = (props) => {
             const params = useParams();
-            return <Modal><TweetDetail {...{...props, match: {params}} } /></Modal>
+            return <Modal><TweetDetail {...{...props, match: {params, user}} } /></Modal>
         }
 
         const WrapperTweets = (props) => {
