@@ -1,7 +1,7 @@
 module.exports = {
     debugMode: false,
     api: {
-        host: "https://api.mini-twitter.onrender.com:10000" //"http://api.localhost:80"
+        host: "http://api.localhost:80"
     },
     tweets: {
         maxTweetSize: 140
