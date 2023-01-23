@@ -12,7 +12,7 @@ html(lang="en")
                     .method-templete 
                         .list-group 
                             each item in services 
-                                a.list-group-item(href=item.apiURLPage)
+                                a.list-group-item(href='/api'+item.apiURLPage)
                                     if item.secure 
                                         span.badge secure 
                                     h4.list-group-item-heading  #{item.title}
